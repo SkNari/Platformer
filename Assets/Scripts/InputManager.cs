@@ -19,7 +19,7 @@ public class InputManager : MonoBehaviour
             avatar.goLeft(input);
             return;
         }
-        avatar.stopMoving();
+        avatar.slowDown();
     }
 
     void updateJump()
@@ -32,10 +32,36 @@ public class InputManager : MonoBehaviour
         jumpPressedLastFrame = (input == 1f);
     }
 
+    void updateInterruptJump()
+    {
+        if (Input.GetAxis("Jump") == 0f && jumpPressedLastFrame)
+        {
+            avatar.interruptJump();
+        }
+
+    }
+
+    void updateDash()
+    {
+        if(Input.GetAxis("Fire1") == 1f)
+        {
+            if (Input.GetAxis("Horizontal") > 0f)
+            {
+                avatar.dash(side.RIGHT);
+            }
+            if (Input.GetAxis("Horizontal") < 0f)
+            {
+                avatar.dash(side.LEFT);
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
         updateMovement();
+        updateInterruptJump();
         updateJump();
+        updateDash();
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-enum side
+public enum side
 {
     RIGHT,
     LEFT,
@@ -15,7 +15,14 @@ public class Avatar : MonoBehaviour
     public float horizontalAcceleration = 0.0f;
     public float gravity = 0f;
     public float jumpSpeed = 0f;
-    public float moveSpeed = 0f;
+    public float wallJumpSpeedMultiplier;
+    public bool isDashing = false;
+    side dashDirection;
+    public float dashDuration;
+    public float dashSpeed;
+    public float dashCooldown;
+    public float timeOfLastDash = -100f;
+    public float timeSinceBeginningOfDash;
     public int maxJumps;
     public int jumpsLeft;
     public bool onGround = false;
@@ -140,136 +147,230 @@ public class Avatar : MonoBehaviour
 
     void fall()
     {
-        verticalSpeed -= gravity * Time.deltaTime;
-        detectGround();
-        if (verticalSpeed <= 0)
+        if (!isDashing)
         {
-            if (onGround)
+            verticalSpeed -= gravity * Time.deltaTime;
+            detectGround();
+            if (verticalSpeed <= 0)
             {
-                verticalSpeed = 0f;
-            }
-            else
-            {
-                if (onRightWall || onLeftWall)
+                if (onGround)
                 {
-                    if (verticalSpeed < -wallFallingSpeed)
-                    {
-                        verticalSpeed = -wallFallingSpeed;
-                    }
+                    verticalSpeed = 0f;
                 }
-                Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
-                transform.position += vertical * Time.deltaTime;
-            }
-        }
-        else
-        {
-            detectCeiling();
-            if(onCeiling)
-            {
-                verticalSpeed = 0f;
+                else
+                {
+                    if (onRightWall || onLeftWall)
+                    {
+                        if (verticalSpeed < -wallFallingSpeed)
+                        {
+                            verticalSpeed = -wallFallingSpeed;
+                        }
+                    }
+                    Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                    transform.position += vertical * Time.deltaTime;
+                }
             }
             else
             {
-                Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
-                transform.position += vertical * Time.deltaTime;
+                detectCeiling();
+                if (onCeiling)
+                {
+                    verticalSpeed = 0f;
+                }
+                else
+                {
+                    Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                    transform.position += vertical * Time.deltaTime;
+                }
             }
         }
     }
 
     public void jump()
     {
-        if (onGround)
+        if (!isDashing)
         {
-            verticalSpeed = jumpSpeed;
-            Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
-            transform.position += vertical * Time.deltaTime;
-        }
-        else
-        {
-            if (onRightWall && lastWallJump != side.RIGHT)//walljump on right wall
+            if (onGround)
             {
                 verticalSpeed = jumpSpeed;
-                horizontalSpeed = -maxHorizontalSpeed;
                 Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                 transform.position += vertical * Time.deltaTime;
-                lastWallJump = side.RIGHT;
             }
             else
             {
-                if (onLeftWall && lastWallJump != side.LEFT)//walljump on left wall
+                if (onRightWall && lastWallJump != side.RIGHT)//walljump on right wall
                 {
                     verticalSpeed = jumpSpeed;
-                    horizontalSpeed = maxHorizontalSpeed;
+                    horizontalSpeed = -maxHorizontalSpeed * wallJumpSpeedMultiplier;
                     Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                     transform.position += vertical * Time.deltaTime;
-                    lastWallJump = side.LEFT;
+                    lastWallJump = side.RIGHT;
+                    jumpsLeft--;
                 }
                 else
                 {
-                    if (jumpsLeft > 0)
+                    if (onLeftWall && lastWallJump != side.LEFT)//walljump on left wall
                     {
                         verticalSpeed = jumpSpeed;
+                        horizontalSpeed = maxHorizontalSpeed * wallJumpSpeedMultiplier;
                         Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                         transform.position += vertical * Time.deltaTime;
+                        lastWallJump = side.LEFT;
                         jumpsLeft--;
+                    }
+                    else
+                    {
+                        if (jumpsLeft > 0)
+                        {
+                            verticalSpeed = jumpSpeed;
+                            Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                            transform.position += vertical * Time.deltaTime;
+                            jumpsLeft--;
+                        }
                     }
                 }
             }
         }
     }
 
+    public void interruptJump()
+    {
+        if(verticalSpeed > 0f && jumpsLeft == maxJumps)
+        {
+            verticalSpeed = 0f;
+        }
+    }
+
+    public void dash(side direction)
+    {
+        if (!isDashing && timeOfLastDash + dashCooldown < Time.time && jumpsLeft > 0)
+        {
+            jumpsLeft--;
+            timeSinceBeginningOfDash = 0f;
+            isDashing = true;
+            dashDirection = direction;
+            verticalSpeed = 0f;
+        }
+    }
+
+    void updateDash()
+    {
+        if(isDashing)
+        {
+            if (dashDirection == side.LEFT)
+            {
+                horizontalSpeed = -dashSpeed * (1 - 0.5f * timeSinceBeginningOfDash / dashDuration);
+            }
+            if (dashDirection == side.RIGHT)
+            {
+                horizontalSpeed = dashSpeed * (1 - 0.5f * timeSinceBeginningOfDash / dashDuration);
+            }
+            if (timeSinceBeginningOfDash > dashDuration || onRightWall || onLeftWall)
+            {
+                isDashing = false;
+                timeOfLastDash = Time.time;
+            }
+            timeSinceBeginningOfDash += Time.deltaTime;
+        }
+    }
+
     void updateHorizontal()
     {
+        detectLeftWall();
+        detectRightWall();
+        if (onRightWall && horizontalSpeed > 0f)
+        {
+            stopMoving();
+        }
+        if (onLeftWall && horizontalSpeed < 0f)
+        {
+            stopMoving();
+        }
         Vector3 horizontal = new Vector3(horizontalSpeed, 0f, 0f);
         transform.position += horizontal * Time.deltaTime;
     }
 
     public void goRight(float input)
-    {   
-
-        if(onGround){
-            horizontalSpeed = maxHorizontalSpeed;
-        }else{
-            horizontalSpeed += horizontalAcceleration * input * Time.deltaTime;
-            if(horizontalSpeed>maxHorizontalSpeed){
+    {
+        if (!isDashing)
+        {
+            if (onGround)
+            {
                 horizontalSpeed = maxHorizontalSpeed;
             }
-        }
-        detectRightWall();
-        if (onRightWall)
-        {
-            stopMoving();
-        }
-        else
-        {
-            detectLeftWall();
+            else
+            {
+                if (horizontalSpeed > maxHorizontalSpeed)
+                {
+                    slowDown();
+                }
+                else
+                {
+                    horizontalSpeed += horizontalAcceleration * input * Time.deltaTime;
+                }
+            }
+            detectRightWall();
+            if (onRightWall)
+            {
+                stopMoving();
+            }
         }
     }
 
     public void goLeft(float input)
     {
-        if(onGround){
-            horizontalSpeed = -maxHorizontalSpeed;
-        }else{
-            horizontalSpeed -= horizontalAcceleration * input * Time.deltaTime;
-            if(horizontalSpeed<-maxHorizontalSpeed){
+        if (!isDashing)
+        {
+            if (onGround)
+            {
                 horizontalSpeed = -maxHorizontalSpeed;
             }
-        }
-        detectLeftWall();
-        if (onLeftWall)
-        {
-            stopMoving();
-        }
-        else
-        {
-            detectRightWall();
+            else
+            {
+                if (horizontalSpeed < -maxHorizontalSpeed)
+                {
+                    slowDown();
+                }
+                horizontalSpeed += horizontalAcceleration * input * Time.deltaTime;
+            }
+            detectLeftWall();
+            if (onLeftWall)
+            {
+                stopMoving();
+            }
+            else
+            {
+                detectRightWall();
+            }
         }
     }
 
-    public void stopMoving()
+    void stopMoving()
     {
-        horizontalSpeed = 0;
+        horizontalSpeed = 0f;
+    }
+
+    public void slowDown()
+    {
+        if (!isDashing)
+        {
+            if (horizontalSpeed > 0f)
+            {
+                horizontalSpeed -= horizontalAcceleration * Time.deltaTime;
+                if (horizontalSpeed < 0f)
+                {
+                    horizontalSpeed = 0f;
+                }
+            }
+            if (horizontalSpeed < 0f)
+            {
+                horizontalSpeed += horizontalAcceleration * Time.deltaTime;
+                if (horizontalSpeed > 0f)
+                {
+                    horizontalSpeed = 0f;
+                }
+            }
+        }
     }
 
     // Start is called before the first frame update
@@ -284,5 +385,6 @@ public class Avatar : MonoBehaviour
     {
         fall();
         updateHorizontal();
+        updateDash();
     }
 }
