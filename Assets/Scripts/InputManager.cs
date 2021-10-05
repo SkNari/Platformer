@@ -5,8 +5,8 @@ using UnityEngine;
 public class InputManager : MonoBehaviour
 {
     public Avatar avatar;
-
-    void move()
+    bool jumpPressedLastFrame;
+    void updateMovement()
     {
         float input = Input.GetAxis("Horizontal");
         if (input > 0)
@@ -22,18 +22,20 @@ public class InputManager : MonoBehaviour
         avatar.stopMoving();
     }
 
-    void jump()
+    void updateJump()
     {
-        if (Input.GetAxis("Jump") == 1f)
+        float input = Input.GetAxis("Jump");
+        if (input == 1f && !jumpPressedLastFrame)
         {
             avatar.jump();
         }
+        jumpPressedLastFrame = (input == 1f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        move();
-        jump();
+        updateMovement();
+        updateJump();
     }
 }

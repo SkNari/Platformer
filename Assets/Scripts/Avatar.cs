@@ -2,19 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+enum side
+{
+    RIGHT,
+    LEFT,
+    NONE,
+}
+
 public class Avatar : MonoBehaviour
 {
     public float gravity = 0f;
     public float jumpSpeed = 0f;
     public float moveSpeed = 0f;
+    public int maxJumps;
+    public int jumpsLeft;
     public bool onGround = false;
     public bool onRightWall;
-    bool onLeftWall;
+    public bool onLeftWall;
+    side lastWallJump = side.NONE;
     bool onCeiling;
     public float wallFallingSpeed;
     public float detectionOffset = 0.01f;
-    public float verticalSpeed = 0f;
-    public float horizontalSpeed = 0f;
+    float verticalSpeed = 0f;
+    float horizontalSpeed = 0f;
     float playerXSize;
     float playerYSize;
 
@@ -27,6 +37,8 @@ public class Avatar : MonoBehaviour
             Vector3 vertical = new Vector3(0f, -hitsRight.distance, 0f);
             transform.position += vertical;
             onGround = true;
+            jumpsLeft = maxJumps;
+            lastWallJump = side.NONE;
             return;
         }
         else
@@ -38,6 +50,8 @@ public class Avatar : MonoBehaviour
                 Vector3 vertical = new Vector3(0f, -hitsLeft.distance, 0f);
                 transform.position += vertical;
                 onGround = true;
+                jumpsLeft = maxJumps;
+                lastWallJump = side.NONE;
                 return;
             }
         }
@@ -166,7 +180,37 @@ public class Avatar : MonoBehaviour
         {
             verticalSpeed = jumpSpeed;
             Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
-            transform.position += vertical *Time.deltaTime;
+            transform.position += vertical * Time.deltaTime;
+        }
+        else
+        {
+            if (onRightWall && lastWallJump != side.RIGHT)
+            {
+                verticalSpeed = jumpSpeed;
+                Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                transform.position += vertical * Time.deltaTime;
+                lastWallJump = side.RIGHT;
+            }
+            else
+            {
+                if (onLeftWall && lastWallJump != side.LEFT)
+                {
+                    verticalSpeed = jumpSpeed;
+                    Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                    transform.position += vertical * Time.deltaTime;
+                    lastWallJump = side.LEFT;
+                }
+                else
+                {
+                    if (jumpsLeft > 0)
+                    {
+                        verticalSpeed = jumpSpeed;
+                        Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
+                        transform.position += vertical * Time.deltaTime;
+                        jumpsLeft--;
+                    }
+                }
+            }
         }
     }
 
@@ -184,6 +228,10 @@ public class Avatar : MonoBehaviour
         {
             stopMoving();
         }
+        else
+        {
+            detectLeftWall();
+        }
     }
 
     public void goLeft(float input)
@@ -193,6 +241,10 @@ public class Avatar : MonoBehaviour
         if (onLeftWall)
         {
             stopMoving();
+        }
+        else
+        {
+            detectRightWall();
         }
     }
 
