@@ -10,7 +10,9 @@ enum side
 }
 
 public class Avatar : MonoBehaviour
-{
+{   
+    public float maxHorizontalSpeed = 0f;
+    public float horizontalAcceleration = 0.0f;
     public float gravity = 0f;
     public float jumpSpeed = 0f;
     public float moveSpeed = 0f;
@@ -184,18 +186,20 @@ public class Avatar : MonoBehaviour
         }
         else
         {
-            if (onRightWall && lastWallJump != side.RIGHT)
+            if (onRightWall && lastWallJump != side.RIGHT)//walljump on right wall
             {
                 verticalSpeed = jumpSpeed;
+                horizontalSpeed = -maxHorizontalSpeed;
                 Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                 transform.position += vertical * Time.deltaTime;
                 lastWallJump = side.RIGHT;
             }
             else
             {
-                if (onLeftWall && lastWallJump != side.LEFT)
+                if (onLeftWall && lastWallJump != side.LEFT)//walljump on left wall
                 {
                     verticalSpeed = jumpSpeed;
+                    horizontalSpeed = maxHorizontalSpeed;
                     Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                     transform.position += vertical * Time.deltaTime;
                     lastWallJump = side.LEFT;
@@ -221,8 +225,16 @@ public class Avatar : MonoBehaviour
     }
 
     public void goRight(float input)
-    {
-        horizontalSpeed = moveSpeed * input;
+    {   
+
+        if(onGround){
+            horizontalSpeed = maxHorizontalSpeed;
+        }else{
+            horizontalSpeed += horizontalAcceleration * input * Time.deltaTime;
+            if(horizontalSpeed>maxHorizontalSpeed){
+                horizontalSpeed = maxHorizontalSpeed;
+            }
+        }
         detectRightWall();
         if (onRightWall)
         {
@@ -236,7 +248,14 @@ public class Avatar : MonoBehaviour
 
     public void goLeft(float input)
     {
-        horizontalSpeed = moveSpeed * input;
+        if(onGround){
+            horizontalSpeed = -maxHorizontalSpeed;
+        }else{
+            horizontalSpeed -= horizontalAcceleration * input * Time.deltaTime;
+            if(horizontalSpeed<-maxHorizontalSpeed){
+                horizontalSpeed = -maxHorizontalSpeed;
+            }
+        }
         detectLeftWall();
         if (onLeftWall)
         {
