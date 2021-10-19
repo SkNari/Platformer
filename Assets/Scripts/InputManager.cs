@@ -56,6 +56,14 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    void updateForcingFall(){
+        if(Input.GetAxis("Vertical") < 0f){
+            avatar.IsForcingFall = true;
+        }else{
+            avatar.IsForcingFall = false;
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -63,5 +71,6 @@ public class InputManager : MonoBehaviour
         updateInterruptJump();
         updateJump();
         updateDash();
+        updateForcingFall();
     }
 }

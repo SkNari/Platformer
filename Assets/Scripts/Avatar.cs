@@ -36,6 +36,17 @@ public class Avatar : MonoBehaviour
     float horizontalSpeed = 0f;
     float playerXSize;
     float playerYSize;
+    bool isForcingFall = false;
+
+    public bool IsForcingFall {
+        set{
+            isForcingFall = value;
+        }
+        get{
+            return isForcingFall;
+        }
+    }
+    public float forcingFallSpeed;
 
     void detectGround()
     {
@@ -148,8 +159,8 @@ public class Avatar : MonoBehaviour
     void fall()
     {
         if (!isDashing)
-        {
-            verticalSpeed -= gravity * Time.deltaTime;
+        {   
+            verticalSpeed -= isForcingFall ? gravity * forcingFallSpeed * Time.deltaTime : gravity * Time.deltaTime;
             detectGround();
             if (verticalSpeed <= 0)
             {
