@@ -414,8 +414,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 897595846534545278, guid: 40cf907557ae28945b85dda1c26c6406, type: 3}
   m_PrefabInstance: {fileID: 675144305}
   m_PrefabAsset: {fileID: 0}
-<<<<<<< HEAD
-=======
 --- !u!1001 &1567721109
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -478,7 +476,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5733556608082941988, guid: 82610e58c68aa4c4fa8f69ee76c04a93, type: 3}
   m_PrefabInstance: {fileID: 1567721109}
   m_PrefabAsset: {fileID: 0}
->>>>>>> bfb88374bff471b914bf7d201d16fdccff8d925a
 --- !u!1001 &1731802073
 PrefabInstance:
   m_ObjectHideFlags: 0
