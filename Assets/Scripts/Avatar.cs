@@ -515,6 +515,15 @@ public class Avatar : MonoBehaviour
         }
     }
 
+    void handleExitDoor(){
+
+        if((onLeftWall||onRightWall||onGround||onCeiling)&&wallTouched.tag=="ExitDoor"){
+            ExitDoor platform = wallTouched.GetComponent<ExitDoor>();
+            platform.exit();
+        }
+
+    }
+
     // void handleJump(){
     //     Vector3 jumpVector = new Vector3(0,0,0);
     //     if(isJumping&&timeOfJump<jumpDuration/2){
@@ -555,6 +564,7 @@ public class Avatar : MonoBehaviour
         handleMovingPlatform();
         handleKillZone();
         handleStickyPlatform();
+        handleExitDoor();
         fall();
         updateHorizontal();
         updateDash();
