@@ -32,11 +32,27 @@ public class Avatar : MonoBehaviour
     bool onCeiling;
     public float wallFallingSpeed;
     public float detectionOffset = 0.01f;
-    float verticalSpeed = 0f;
-    float horizontalSpeed = 0f;
+    public float verticalSpeed = 0f;
+    public float horizontalSpeed = 0f;
     float playerXSize;
     float playerYSize;
     bool isForcingFall = false;
+
+    //jumpVariables
+    bool isJumping = false;
+    public float jumpDuration;
+    public float jumpMaxspeed;
+    public float timeOfJump = 0.0f;
+
+    //stickyPlatforms handle variables
+
+    bool onSticky;
+    float stickyHorizontalMultiplier;
+    float stickyJumpMultiplier;
+
+    Vector3 platformSpeed = new Vector3(0,0,0);
+
+    GameObject wallTouched;
 
     public bool IsForcingFall {
         set{
@@ -48,12 +64,15 @@ public class Avatar : MonoBehaviour
     }
     public float forcingFallSpeed;
 
+    Vector3 spawnPoint;
+
     void detectGround()
     {
         Vector2 rightOffset = new Vector2((playerXSize / 2) - (playerXSize/100), -playerYSize / 2);
         RaycastHit2D hitsRight = Physics2D.Raycast((Vector2)transform.position + rightOffset, Vector2.down, -verticalSpeed * Time.deltaTime + detectionOffset);
         if (hitsRight.collider != null)
-        {
+        {   
+            wallTouched = hitsRight.collider.gameObject;
             Vector3 vertical = new Vector3(0f, -hitsRight.distance, 0f);
             transform.position += vertical;
             onGround = true;
@@ -66,7 +85,8 @@ public class Avatar : MonoBehaviour
             Vector2 leftOffset = new Vector2((-playerXSize / 2) + (playerXSize/100), -playerYSize / 2);
             RaycastHit2D hitsLeft = Physics2D.Raycast((Vector2)transform.position + leftOffset, Vector2.down, -verticalSpeed * Time.deltaTime + detectionOffset);
             if (hitsLeft.collider != null)
-            {
+            {   
+                wallTouched = hitsLeft.collider.gameObject;
                 Vector3 vertical = new Vector3(0f, -hitsLeft.distance, 0f);
                 transform.position += vertical;
                 onGround = true;
@@ -83,7 +103,8 @@ public class Avatar : MonoBehaviour
         Vector2 rightOffset = new Vector2((playerXSize / 2) - (playerXSize / 100), playerYSize / 2);
         RaycastHit2D hitsRight = Physics2D.Raycast((Vector2)transform.position + rightOffset, Vector2.up, verticalSpeed * Time.deltaTime + detectionOffset);
         if (hitsRight.collider != null)
-        {
+        {   
+            wallTouched = hitsRight.collider.gameObject;
             Vector3 vertical = new Vector3(0f, hitsRight.distance, 0f);
             transform.position += vertical;
             onCeiling = true;
@@ -94,7 +115,8 @@ public class Avatar : MonoBehaviour
             Vector2 leftOffset = new Vector2((-playerXSize / 2) + (playerXSize / 100), playerYSize / 2);
             RaycastHit2D hitsLeft = Physics2D.Raycast((Vector2)transform.position + leftOffset, Vector2.up, verticalSpeed * Time.deltaTime + detectionOffset);
             if (hitsLeft.collider != null)
-            {
+            {   
+                wallTouched = hitsLeft.collider.gameObject;
                 Vector3 vertical = new Vector3(0f, hitsLeft.distance, 0f);
                 transform.position += vertical;
                 onCeiling = true;
@@ -109,7 +131,8 @@ public class Avatar : MonoBehaviour
         Vector2 upOffset = new Vector2(playerXSize / 2, (playerYSize / 2) - (playerYSize / 100));
         RaycastHit2D hitsUp = Physics2D.Raycast((Vector2)transform.position + upOffset, Vector2.right, horizontalSpeed * Time.deltaTime + detectionOffset);
         if (hitsUp.collider != null)
-        {
+        {   
+            wallTouched = hitsUp.collider.gameObject;
             Vector3 horizontal = new Vector3(hitsUp.distance, 0f, 0f);
             transform.position += horizontal;
             onRightWall = true;
@@ -121,6 +144,7 @@ public class Avatar : MonoBehaviour
             RaycastHit2D hitsDown = Physics2D.Raycast((Vector2)transform.position + downOffset, Vector2.right, horizontalSpeed * Time.deltaTime + detectionOffset);
             if (hitsDown.collider != null)
             {
+                wallTouched = hitsDown.collider.gameObject;
                 Vector3 horizontal = new Vector3(hitsDown.distance, 0f, 0f);
                 transform.position += horizontal;
                 onRightWall = true;
@@ -135,7 +159,8 @@ public class Avatar : MonoBehaviour
         Vector2 upOffset = new Vector2(-playerXSize / 2, (playerYSize / 2) - (playerYSize / 100));
         RaycastHit2D hitsUp = Physics2D.Raycast((Vector2)transform.position + upOffset, Vector2.left, -horizontalSpeed * Time.deltaTime + detectionOffset);
         if (hitsUp.collider != null)
-        {
+        {   
+            wallTouched = hitsUp.collider.gameObject;
             Vector3 horizontal = new Vector3(-hitsUp.distance, 0f, 0f);
             transform.position += horizontal;
             onLeftWall = true;
@@ -146,7 +171,8 @@ public class Avatar : MonoBehaviour
             Vector2 downOffset = new Vector2(-playerXSize / 2, -((playerYSize / 2) - (playerYSize / 100)));
             RaycastHit2D hitsDown = Physics2D.Raycast((Vector2)transform.position + downOffset, Vector2.left, -horizontalSpeed * Time.deltaTime + detectionOffset);
             if (hitsDown.collider != null)
-            {
+            {   
+                wallTouched = hitsDown.collider.gameObject;
                 Vector3 horizontal = new Vector3(-hitsDown.distance, 0f, 0f);
                 transform.position += horizontal;
                 onLeftWall = true;
@@ -156,12 +182,20 @@ public class Avatar : MonoBehaviour
         onLeftWall = false;
     }
 
+    void detectWalls(){
+        detectGround();
+        detectCeiling();
+        detectLeftWall();
+        detectRightWall();
+    }
+
     void fall()
     {
         if (!isDashing)
         {   
-            verticalSpeed -= isForcingFall ? gravity * forcingFallSpeed * Time.deltaTime : gravity * Time.deltaTime;
-            detectGround();
+            if(!isJumping){
+                verticalSpeed -= isForcingFall ? gravity * forcingFallSpeed * Time.deltaTime : gravity * Time.deltaTime;
+            }
             if (verticalSpeed <= 0)
             {
                 if (onGround)
@@ -183,7 +217,6 @@ public class Avatar : MonoBehaviour
             }
             else
             {
-                detectCeiling();
                 if (onCeiling)
                 {
                     verticalSpeed = 0f;
@@ -203,7 +236,7 @@ public class Avatar : MonoBehaviour
         {
             if (onGround)
             {
-                verticalSpeed = jumpSpeed;
+                verticalSpeed = jumpSpeed * stickyJumpMultiplier;
                 Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                 transform.position += vertical * Time.deltaTime;
             }
@@ -211,7 +244,7 @@ public class Avatar : MonoBehaviour
             {
                 if (onRightWall && lastWallJump != side.RIGHT)//walljump on right wall
                 {
-                    verticalSpeed = jumpSpeed;
+                    verticalSpeed = jumpSpeed * stickyJumpMultiplier;
                     horizontalSpeed = -maxHorizontalSpeed * wallJumpSpeedMultiplier;
                     Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                     transform.position += vertical * Time.deltaTime;
@@ -222,7 +255,7 @@ public class Avatar : MonoBehaviour
                 {
                     if (onLeftWall && lastWallJump != side.LEFT)//walljump on left wall
                     {
-                        verticalSpeed = jumpSpeed;
+                        verticalSpeed = jumpSpeed * stickyJumpMultiplier;
                         horizontalSpeed = maxHorizontalSpeed * wallJumpSpeedMultiplier;
                         Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                         transform.position += vertical * Time.deltaTime;
@@ -233,7 +266,7 @@ public class Avatar : MonoBehaviour
                     {
                         if (jumpsLeft > 0)
                         {
-                            verticalSpeed = jumpSpeed;
+                            verticalSpeed = jumpSpeed * stickyJumpMultiplier;
                             Vector3 vertical = new Vector3(0f, verticalSpeed, 0f);
                             transform.position += vertical * Time.deltaTime;
                             jumpsLeft--;
@@ -287,8 +320,6 @@ public class Avatar : MonoBehaviour
 
     void updateHorizontal()
     {
-        detectLeftWall();
-        detectRightWall();
         if (onRightWall && horizontalSpeed > 0f)
         {
             stopMoving();
@@ -298,7 +329,7 @@ public class Avatar : MonoBehaviour
             stopMoving();
         }
         Vector3 horizontal = new Vector3(horizontalSpeed, 0f, 0f);
-        transform.position += horizontal * Time.deltaTime;
+        transform.position += (horizontal+platformSpeed) * Time.deltaTime * stickyHorizontalMultiplier;
     }
 
     public void goRight(float input)
@@ -384,18 +415,103 @@ public class Avatar : MonoBehaviour
         }
     }
 
+    void updateWallTouched(){
+
+        if(!onCeiling&&!onGround&&!onLeftWall&&!onRightWall){
+            wallTouched = null;
+        }
+
+    }
+
+    // update : input -> bool
+    // fixedeupdate -> bool,horizontal axis -> ajout de vélocité(vector2) si on dépasse pas maxspeed
+    // jump : velocité.y += jump
+    //             -> checkcollisions -> si dans un truc, on sort
+    //                                 -> si touche un mur, vélocité correspondante à 0
+    //                 move -> vector2 vélocité -> en x, velocité.x * time.fixedDeltaTime
+    //                                         -> en y, velocité.y * time.fixeddeltatime + -1/2 g * temps²
+                                                
+
+
+
+
+
+    void handleMovingPlatform(){
+
+        if((onLeftWall||onRightWall||onGround)&&wallTouched.tag=="MovingPlatform"){
+            PlatformEngine platform = wallTouched.GetComponent<PlatformEngine>();
+            if(!(onRightWall&&platform.speed.x>0)&&!(onLeftWall&&platform.speed.x<0)){
+                platformSpeed = platform.speed;
+            }
+        }else{
+            platformSpeed = new Vector3(0,0,0);
+        }
+
+    }
+
+    void  handleKillZone(){
+        if((onLeftWall||onRightWall||onGround||onCeiling)&&wallTouched.tag=="KillZone"){
+            kill();
+        }
+    }
+
+    void handleStickyPlatform(){
+        if(onGround&&wallTouched.tag=="StickyPlatform"){
+            onSticky=true;
+            StickyPlatform platform = wallTouched.GetComponent<StickyPlatform>();
+            stickyHorizontalMultiplier = platform.horizontalSpeedSlowMultiplier;
+            stickyJumpMultiplier = platform.jumpSlowMultiplier;
+        }else{
+            onSticky = false;
+            stickyHorizontalMultiplier = 1.0f;
+            stickyJumpMultiplier = 1.0f;
+        }
+    }
+
+    // void handleJump(){
+    //     Vector3 jumpVector = new Vector3(0,0,0);
+    //     if(isJumping&&timeOfJump<jumpDuration/2){
+
+    //         verticalSpeed = jumpMaxspeed - jumpMaxspeed*(timeOfJump/jumpDuration);
+
+    //         timeOfJump+=Time.deltaTime;
+
+    //         Debug.Log("je monte");
+
+    //     }else if(isJumping&&jumpDuration/2<timeOfJump&&timeOfJump<jumpDuration){
+    //         verticalSpeed = -jumpMaxspeed+jumpMaxspeed*((timeOfJump+jumpDuration/2)/jumpDuration);
+    //         timeOfJump+=Time.deltaTime;
+
+    //         Debug.Log("Je descend");
+    //     }
+    //     else{
+    //         isJumping=false;
+    //     }
+    // }
+
+    void kill(){
+        transform.position = spawnPoint;
+    }
+
     // Start is called before the first frame update
     void Start()
-    {
+    {   
+        spawnPoint = transform.position;
         playerXSize = transform.localScale.x;
         playerYSize = transform.localScale.y;
     }
 
     // Update is called once per frame
     void Update()
-    {
+    {   
+        detectWalls();
+        updateWallTouched();
+        handleMovingPlatform();
+        handleKillZone();
+        handleStickyPlatform();
         fall();
         updateHorizontal();
         updateDash();
+
     }
 }

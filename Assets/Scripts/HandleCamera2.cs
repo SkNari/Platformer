@@ -16,9 +16,6 @@ public class HandleCamera2 : MonoBehaviour
         height = mainCamera.pixelHeight;
         width = mainCamera.pixelWidth;
 
-        Debug.Log(height);
-        Debug.Log(width);
-
     }
 
     void Update(){

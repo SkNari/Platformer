@@ -12,8 +12,6 @@ public class PlatformEngine : MonoBehaviour
 
     private float timeSinceLastReverse;// in seconds    
 
-    private float reverse = 1;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -29,14 +27,13 @@ public class PlatformEngine : MonoBehaviour
     }
 
     void updatePosition(){
-        transform.position += speed * Time.deltaTime * reverse;
+        transform.position += speed * Time.deltaTime;
     }
 
     void handleReverse(){
 
-        Debug.Log(Time.time - timeSinceLastReverse);
         if(Time.time - timeSinceLastReverse > timeBeforeReverse){
-            reverse*=-1;
+            speed*=-1;
             timeSinceLastReverse = Time.time;
         }
     }
