@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1936696728452017929}
   - component: {fileID: 1936696728452017942}
   - component: {fileID: 1936696728452017943}
-  - component: {fileID: 1936696728452017940}
+  - component: {fileID: 4914770917006288069}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -115,29 +115,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 1936696728452017941}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d271f328582ad14084ff124163736d9, type: 3}
+  m_Script: {fileID: 11500000, guid: 2996c8aa689478b42b7e8f4eb3b3a323, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHorizontalSpeed: 10
-  horizontalAcceleration: 100
-  gravity: 20
-  jumpSpeed: 10
-  wallJumpSpeedMultiplier: 2
+  maxHorizontalSpeed: 0
+  horizontalAcceleration: 0
+  gravity: 0
+  jumpSpeed: 0
+  wallJumpSpeedMultiplier: 0
   isDashing: 0
-  dashDuration: 0.1
-  dashSpeed: 25
+  particlesLot: {fileID: 0}
+  particlesFew: {fileID: 0}
+  particlesLandOffset: {x: 0, y: 0, z: 0}
+  dashDuration: 0
+  dashSpeed: 0
   dashCooldown: 0
   timeOfLastDash: -100
   timeSinceBeginningOfDash: 0
-  maxJumps: 1
+  maxJumps: 0
   jumpsLeft: 0
   onGround: 0
   onRightWall: 0
   onLeftWall: 0
-  wallFallingSpeed: 8
+  wallFallingSpeed: 0
   detectionOffset: 0.01
-  forcingFallSpeed: 5
---- !u!114 &1936696728452017940
+  verticalSpeed: 0
+  jumpDuration: 0
+  jumpMaxspeed: 0
+  timeOfJump: 0
+  forcingFallSpeed: 0
+--- !u!114 &4914770917006288069
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -146,7 +153,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1936696728452017941}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 57ff2a7ebf8f44b4eb24dd6b47fe02a1, type: 3}
+  m_Script: {fileID: 11500000, guid: 5df053d875dbd804ba25805c626e2a2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   avatar: {fileID: 1936696728452017943}

@@ -453,7 +453,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748058235}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -16.99, y: 0.95, z: 0}
+  m_LocalPosition: {x: -19.84, y: 1.71, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -486,8 +486,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHorizontalSpeed: 10
   horizontalAcceleration: 100
-  gravity: 20
-  jumpSpeed: 10
+  gravity: 50
+  jumpSpeed: 20
   wallJumpSpeedMultiplier: 2
   isDashing: 0
   particlesLot: {fileID: 100253111}
@@ -506,6 +506,10 @@ MonoBehaviour:
   wallFallingSpeed: 3
   detectionOffset: 0.01
   verticalSpeed: 0
+  jumpDuration: 0
+  jumpMaxspeed: 0
+  timeOfJump: 0
+  forcingFallSpeed: 0
 --- !u!50 &1748058241
 Rigidbody2D:
   serializedVersion: 4
