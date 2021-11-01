@@ -69,7 +69,7 @@ public class Avatar : MonoBehaviour
     }
     public float forcingFallSpeed;
 
-    Vector3 spawnPoint;
+    public GameObject spawnPoint;
 
     void detectGround()
     {
@@ -537,13 +537,12 @@ public class Avatar : MonoBehaviour
     // }
 
     void kill(){
-        transform.position = spawnPoint;
+        transform.position = spawnPoint.transform.position;
     }
 
     // Start is called before the first frame update
     void Start()
     {   
-        spawnPoint = transform.position;
         playerXSize = transform.localScale.x;
         playerYSize = transform.localScale.y;
     }
