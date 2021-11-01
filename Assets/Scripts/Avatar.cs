@@ -17,6 +17,9 @@ public class Avatar : MonoBehaviour
     public float jumpSpeed = 0f;
     public float wallJumpSpeedMultiplier;
     public bool isDashing = false;
+    public GameObject particlesLot;
+    public GameObject particlesFew;
+    public Vector3 particlesLandOffset;
     side dashDirection;
     public float dashDuration;
     public float dashSpeed;
@@ -28,11 +31,13 @@ public class Avatar : MonoBehaviour
     public bool onGround = false;
     public bool onRightWall;
     public bool onLeftWall;
+    bool onRightWallLastFrame;
+    bool onLeftWallLastFrame;
     side lastWallJump = side.NONE;
     bool onCeiling;
     public float wallFallingSpeed;
     public float detectionOffset = 0.01f;
-    float verticalSpeed = 0f;
+    public float verticalSpeed = 0f;
     float horizontalSpeed = 0f;
     float playerXSize;
     float playerYSize;
@@ -145,6 +150,42 @@ public class Avatar : MonoBehaviour
         onLeftWall = false;
     }
 
+    void land()
+    {
+        if (verticalSpeed < -5f)
+        {
+            particlesLot.transform.position = transform.position + particlesLandOffset;
+            particlesLot.GetComponent<ParticleSystem>().Play();
+        }
+        else
+        {
+            particlesFew.transform.position = transform.position + particlesLandOffset;
+            particlesFew.GetComponent<ParticleSystem>().Play();
+        }
+    }
+
+    void rightWallParticles()
+    {
+        if (onRightWall && !onRightWallLastFrame)
+        {
+            Vector3 offset = new Vector3(playerXSize, 0f, 0f);
+            particlesFew.transform.position = transform.position + offset;
+            particlesFew.GetComponent<ParticleSystem>().Play();
+        }
+        onRightWallLastFrame = onRightWall;
+    }
+
+    void leftWallParticles()
+    {
+        if (onLeftWall && !onLeftWallLastFrame)
+        {
+            Vector3 offset = new Vector3(playerXSize, 0f, 0f);
+            particlesFew.transform.position = transform.position - offset;
+            particlesFew.GetComponent<ParticleSystem>().Play();
+        }
+        onLeftWallLastFrame = onLeftWall;
+    }
+
     void fall()
     {
         if (!isDashing)
@@ -155,6 +196,10 @@ public class Avatar : MonoBehaviour
             {
                 if (onGround)
                 {
+                    if (verticalSpeed <= -1f)
+                    {
+                        land();
+                    }
                     verticalSpeed = 0f;
                 }
                 else
@@ -278,6 +323,8 @@ public class Avatar : MonoBehaviour
     {
         detectLeftWall();
         detectRightWall();
+        rightWallParticles();
+        leftWallParticles();
         if (onRightWall && horizontalSpeed > 0f)
         {
             stopMoving();
