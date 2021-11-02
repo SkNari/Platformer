@@ -16,7 +16,7 @@ public class Avatar : MonoBehaviour
     public float gravity = 0f;
     public float jumpSpeed = 0f;
     public float wallJumpSpeedMultiplier;
-    public bool isDashing = false;
+    bool isDashing = false;
     public GameObject particlesLot;
     public GameObject particlesFew;
     public Vector3 particlesLandOffset;
@@ -24,20 +24,22 @@ public class Avatar : MonoBehaviour
     public float dashDuration;
     public float dashSpeed;
     public float dashCooldown;
-    public float timeOfLastDash = -100f;
-    public float timeSinceBeginningOfDash;
+    float dashesLeft;
+    public float maxDashes;
+    float timeOfLastDash = -100f;
+    float timeSinceBeginningOfDash;
     public int maxJumps;
-    public int jumpsLeft;
-    public bool onGround = false;
-    public bool onRightWall;
-    public bool onLeftWall;
+    int jumpsLeft;
+    bool onGround = false;
+    bool onRightWall;
+    bool onLeftWall;
     bool onRightWallLastFrame;
     bool onLeftWallLastFrame;
     side lastWallJump = side.NONE;
     bool onCeiling;
     public float wallFallingSpeed;
     public float detectionOffset = 0.01f;
-    public float verticalSpeed = 0f;
+    float verticalSpeed = 0f;
     float horizontalSpeed = 0f;
     float playerXSize;
     float playerYSize;
@@ -47,11 +49,10 @@ public class Avatar : MonoBehaviour
     bool isJumping = false;
     public float jumpDuration;
     public float jumpMaxspeed;
-    public float timeOfJump = 0.0f;
+//    float timeOfJump = 0.0f;
 
     //stickyPlatforms handle variables
 
-    bool onSticky;
     float stickyHorizontalMultiplier;
     float stickyJumpMultiplier;
 
@@ -70,6 +71,7 @@ public class Avatar : MonoBehaviour
     public float forcingFallSpeed;
 
     public GameObject spawnPoint;
+    public CameraShake cameraShake;
 
     //camerashake
 
@@ -86,6 +88,7 @@ public class Avatar : MonoBehaviour
             transform.position += vertical;
             onGround = true;
             jumpsLeft = maxJumps;
+            dashesLeft = maxDashes;
             lastWallJump = side.NONE;
             return;
         }
@@ -100,6 +103,7 @@ public class Avatar : MonoBehaviour
                 transform.position += vertical;
                 onGround = true;
                 jumpsLeft = maxJumps;
+                dashesLeft = maxDashes;
                 lastWallJump = side.NONE;
                 return;
             }
@@ -140,8 +144,11 @@ public class Avatar : MonoBehaviour
         Vector2 upOffset = new Vector2(playerXSize / 2, (playerYSize / 2) - (playerYSize / 100));
         RaycastHit2D hitsUp = Physics2D.Raycast((Vector2)transform.position + upOffset, Vector2.right, horizontalSpeed * Time.deltaTime + detectionOffset);
         if (hitsUp.collider != null)
-        {   
-            wallTouched = hitsUp.collider.gameObject;
+        {
+            if (wallTouched == null || wallTouched.tag != "KillZone")
+            {
+                wallTouched = hitsUp.collider.gameObject;
+            }
             Vector3 horizontal = new Vector3(hitsUp.distance, 0f, 0f);
             transform.position += horizontal;
             onRightWall = true;
@@ -153,7 +160,10 @@ public class Avatar : MonoBehaviour
             RaycastHit2D hitsDown = Physics2D.Raycast((Vector2)transform.position + downOffset, Vector2.right, horizontalSpeed * Time.deltaTime + detectionOffset);
             if (hitsDown.collider != null)
             {
-                wallTouched = hitsDown.collider.gameObject;
+                if (wallTouched == null || wallTouched.tag != "KillZone")
+                {
+                    wallTouched = hitsDown.collider.gameObject;
+                }
                 Vector3 horizontal = new Vector3(hitsDown.distance, 0f, 0f);
                 transform.position += horizontal;
                 onRightWall = true;
@@ -168,8 +178,11 @@ public class Avatar : MonoBehaviour
         Vector2 upOffset = new Vector2(-playerXSize / 2, (playerYSize / 2) - (playerYSize / 100));
         RaycastHit2D hitsUp = Physics2D.Raycast((Vector2)transform.position + upOffset, Vector2.left, -horizontalSpeed * Time.deltaTime + detectionOffset);
         if (hitsUp.collider != null)
-        {   
-            wallTouched = hitsUp.collider.gameObject;
+        {
+            if (wallTouched == null || wallTouched.tag != "KillZone")
+            {
+                wallTouched = hitsUp.collider.gameObject;
+            }
             Vector3 horizontal = new Vector3(-hitsUp.distance, 0f, 0f);
             transform.position += horizontal;
             onLeftWall = true;
@@ -180,8 +193,11 @@ public class Avatar : MonoBehaviour
             Vector2 downOffset = new Vector2(-playerXSize / 2, -((playerYSize / 2) - (playerYSize / 100)));
             RaycastHit2D hitsDown = Physics2D.Raycast((Vector2)transform.position + downOffset, Vector2.left, -horizontalSpeed * Time.deltaTime + detectionOffset);
             if (hitsDown.collider != null)
-            {   
-                wallTouched = hitsDown.collider.gameObject;
+            {
+                if (wallTouched == null || wallTouched.tag != "KillZone")
+                {
+                    wallTouched = hitsDown.collider.gameObject;
+                }
                 Vector3 horizontal = new Vector3(-hitsDown.distance, 0f, 0f);
                 transform.position += horizontal;
                 onLeftWall = true;
@@ -200,12 +216,12 @@ public class Avatar : MonoBehaviour
     
     void land()
     {
-        if (verticalSpeed < -5f)
+        if (verticalSpeed < -40f)
         {
             particlesLot.transform.position = transform.position + particlesLandOffset;
             particlesLot.GetComponent<ParticleSystem>().Play();
         }
-        else
+        if (verticalSpeed < -10f)
         {
             particlesFew.transform.position = transform.position + particlesLandOffset;
             particlesFew.GetComponent<ParticleSystem>().Play();
@@ -245,7 +261,7 @@ public class Avatar : MonoBehaviour
             {
                 if (onGround)
                 {
-                    if (verticalSpeed <= -1f)
+                    if (verticalSpeed <= 0f)
                     {
                         land();
                     }
@@ -336,9 +352,9 @@ public class Avatar : MonoBehaviour
 
     public void dash(side direction)
     {
-        if (!isDashing && timeOfLastDash + dashCooldown < Time.time && jumpsLeft > 0)
+        if (!isDashing && timeOfLastDash + dashCooldown < Time.time && dashesLeft > 0)
         {
-            jumpsLeft--;
+            dashesLeft--;
             timeSinceBeginningOfDash = 0f;
             isDashing = true;
             dashDirection = direction;
@@ -389,7 +405,7 @@ public class Avatar : MonoBehaviour
         {
             if (onGround)
             {
-                horizontalSpeed = maxHorizontalSpeed;
+                horizontalSpeed = maxHorizontalSpeed*input;
             }
             else
             {
@@ -416,7 +432,7 @@ public class Avatar : MonoBehaviour
         {
             if (onGround)
             {
-                horizontalSpeed = -maxHorizontalSpeed;
+                horizontalSpeed = maxHorizontalSpeed*input;
             }
             else
             {
@@ -508,12 +524,10 @@ public class Avatar : MonoBehaviour
 
     void handleStickyPlatform(){
         if(onGround&&wallTouched.tag=="StickyPlatform"){
-            onSticky=true;
             StickyPlatform platform = wallTouched.GetComponent<StickyPlatform>();
             stickyHorizontalMultiplier = platform.horizontalSpeedSlowMultiplier;
             stickyJumpMultiplier = platform.jumpSlowMultiplier;
         }else{
-            onSticky = false;
             stickyHorizontalMultiplier = 1.0f;
             stickyJumpMultiplier = 1.0f;
         }
@@ -551,7 +565,7 @@ public class Avatar : MonoBehaviour
 
     void kill(){
         transform.position = spawnPoint.transform.position;
-        shaker.TriggerShake();
+        cameraShake.TriggerShake();
     }
 
     // Start is called before the first frame update
@@ -562,7 +576,7 @@ public class Avatar : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {   
         detectWalls();
         updateWallTouched();
