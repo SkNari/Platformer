@@ -21,7 +21,7 @@ public class CameraShake : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(shakeDuration>0)
+        if(shakeDuration>0f)
         {
             transform.position = initialPosition + Random.insideUnitSphere * shakeMagnitude;
             shakeDuration-=Time.deltaTime*dampingSpeed;
