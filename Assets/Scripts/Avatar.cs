@@ -71,6 +71,10 @@ public class Avatar : MonoBehaviour
 
     public GameObject spawnPoint;
 
+    //camerashake
+
+    public CameraShake shaker;
+
     void detectGround()
     {
         Vector2 rightOffset = new Vector2((playerXSize / 2) - (playerXSize/100), -playerYSize / 2);
@@ -547,6 +551,7 @@ public class Avatar : MonoBehaviour
 
     void kill(){
         transform.position = spawnPoint.transform.position;
+        shaker.TriggerShake();
     }
 
     // Start is called before the first frame update
